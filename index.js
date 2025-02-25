@@ -9,7 +9,8 @@ let field = [];
 let currentPlayer = CROSS;
 let gameOver = false;
 let dimension = 3;
-startGame();
+let totalSteps = 0;
+startGame(3);
 addResetListener();
 
 
@@ -24,7 +25,11 @@ function generateField(dimension) {
     }
 }
 
-function startGame() {
+function startGame(size) {
+    currentPlayer = CROSS;
+    gameOver = false;
+    dimension = size;
+    totalSteps = 0;
     generateField(dimension);
     renderGrid(dimension);
 }
@@ -36,7 +41,7 @@ function renderGrid(dimension) {
         const row = document.createElement('tr');
         for (let j = 0; j < dimension; j++) {
             const cell = document.createElement('td');
-            cell.textContent = EMPTY;
+            cell.textContent = field[i][j];
             cell.addEventListener('click', () => cellClickHandler(i, j));
             row.appendChild(cell);
         }
@@ -135,12 +140,26 @@ function cellClickHandler(row, col) {
     field[row][col] = currentPlayer;
     renderSymbolInCell(currentPlayer, row, col);
     currentPlayer = currentPlayer === CROSS ? ZERO : CROSS;
-
+    totalSteps++;
+    
     /* Пользоваться методом для размещения символа в клетке так:
-        renderSymbolInCell(ZERO, row, col);
-     */
-    gameOver = checkGameEnded();
+    renderSymbolInCell(ZERO, row, col);
+    */
+   gameOver = checkGameEnded();
+   if (gameOver) {
+    return;
+   }
+   resizeIfHalf();
+   
+   makeAiStep();
+}
 
+function resizeIfHalf() {
+    if (totalSteps >= dimension * dimension / 2) {
+        field = expandField(field);
+        dimension += 2;
+        renderGrid(dimension);
+    }
 }
 
 function expandField(field) {
@@ -158,6 +177,17 @@ function expandField(field) {
         }
     }
     return newField;
+}
+
+function makeAiStep() {
+    const [row, col] = getAiStep(field, currentPlayer);
+    field[row][col] = currentPlayer;
+    renderSymbolInCell(currentPlayer, row, col);
+    currentPlayer = currentPlayer === CROSS ? ZERO : CROSS;
+    totalSteps++;
+    gameOver = checkGameEnded();
+    if (!gameOver)
+        resizeIfHalf();
 }
 
 function getAiStep(field, player) {
@@ -241,7 +271,11 @@ function addResetListener() {
 }
 
 function resetClickHandler() {
-    console.log('reset!');
+    const startSize = document.getElementById('startSize');
+    let raw = Number(startSize.value);
+    if (Number.isNaN(raw) || raw < 3)
+        raw = 3;
+    startGame(raw);
 }
 
 
