@@ -1,6 +1,8 @@
 const CROSS = 'X';
 const ZERO = 'O';
 const EMPTY = ' ';
+const WINNER_COLOR = "green";
+const LOSER_COLOR = "red";
 
 const container = document.getElementById('fieldWrapper');
 
@@ -76,12 +78,31 @@ function checkWinFor(player) {
     return false;
 }
 
+function renderWinnerColors(winner) {
+    const loser = winner === CROSS ? ZERO : CROSS;
+    for (let row = 0; row < dimension; row++) {
+        for (let col = 0; col < dimension; col++) {
+            if (field[row][col] === EMPTY) {
+                continue;
+            }
+            if (field[row][col] === winner) {
+                renderSymbolInCell(winner, row, col, WINNER_COLOR);
+            } else {
+                renderSymbolInCell(loser, row, col, LOSER_COLOR);
+            }
+
+        }
+    }
+}
+
 function checkGameEnded() {
     if (checkWinFor(ZERO)) {
         alert("Нолики выиграли");
+        renderWinnerColors(ZERO);
         return true;
     } else if (checkWinFor(CROSS)) {
         alert("Крестики выиграли");
+        renderWinnerColors(CROSS);
         return true;
     }
     for (const row of field) {
