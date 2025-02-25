@@ -135,7 +135,87 @@ function cellClickHandler(row, col) {
 
 }
 
-function renderSymbolInCell(symbol, row, col, color = '#333') {
+function expandField(field) {
+    const oldSize = field.length;
+    const size = oldSize + 2;
+    const newField = [];
+    for (let i = 0; i < size; i++) {
+        newField.push([]);
+        for (let j = 0; j < size; j++) {
+            if (i === 0 || j === 0 || i == size - 1 || j == size - 1) {
+                newField[i].push(EMPTY);
+            } else {
+                newField[i].push(field[i - 1][j - 1]);
+            }
+        }
+    }
+    return newField;
+}
+
+function getAiStep(field, player) {
+    const size = field.length;
+    for (const line of foreachAllLines(size)) {
+        let wasEmpty = false;
+        let step = null;
+        for (let [value, i, j] of foreachLine(field, line)) {
+            if (value !== player) {
+                if (value === EMPTY) {
+                    if (wasEmpty) {
+                        step = null;
+                        break;
+                    }
+                    wasEmpty = true;
+                    step = [i, j];
+                    continue;
+                }
+                step = null;
+                break;
+            }
+        }
+        if (step) {
+            return step;
+        }
+    }
+    for (let t = 0; t < 1000; t++) {
+        const i = Math.floor(Math.random() * size);
+        const j = Math.floor(Math.random() * size);
+        if (field[i][j] === EMPTY)
+            return [i, j];
+    }
+    return null;
+}
+
+function* foreachLine(field, line) {
+    const size = field.length;
+    if (line[0] === 'd') {
+        for (let i = 0; i < size; i++) {
+            if (line[1] === 0) {
+                yield [field[i][i], i, i];
+            } else {
+                yield [field[i][size - i - 1], i, size - i - 1];
+            }
+        }
+    } else if (line[0] === 'h') {
+        for (let i = 0; i < size; i++) {
+            yield [field[i][line[1]], i, line[1]];
+        }
+    } else if (line[0] === 'v') {
+        for (let i = 0; i < size; i++) {
+            yield [field[line[1]][i], line[1], i];
+        }
+    }
+}
+
+function* foreachAllLines(size) {
+    for (let i = 0; i < size; i++) {
+        yield ['h', i];
+        yield ['v', i];
+    }
+    yield ['d', 0];
+    yield ['d', 1];
+}
+
+function renderSymbolInCell (symbol, row, col, color = '#333') {
     const targetCell = findCell(row, col);
 
     targetCell.textContent = symbol;
