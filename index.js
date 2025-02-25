@@ -1,8 +1,7 @@
 const CROSS = 'X';
 const ZERO = 'O';
 const EMPTY = ' ';
-const WINNER_COLOR = "green";
-const LOSER_COLOR = "red";
+const WINNER_COLOR = "red";
 
 const container = document.getElementById('fieldWrapper');
 
@@ -51,60 +50,69 @@ function checkDiagFor(player, cellSelector) {
             return false;
         }
     }
-    return true;
+    let mask = []
+    for (let row = 0; row < dimension; row++) {
+        mask.push([row, row]);
+    }
+    return mask;
 }
 
 function checkWinFor(player) {
     // по строкам
-    for (const row of field) {
-        if (row.every(cell => cell === player)) {
-            return true;
+    for (let row = 0; row < dimension; row++) {
+        if (field[row].every(cell => cell === player)) {
+            let mask = []
+            for (let col = 0; col < dimension; col++) {
+                mask.push([row, col]);
+            }
+            return mask;
         }
     }
     // по столбцам
     for (let col = 0; col < dimension; col++) {
         if (field.every(row => row[col] === player)) {
-            return true;
+            let mask = []
+            for (let row = 0; row < dimension; row++) {
+                mask.push([row, col]);
+            }
+            return mask;
         }
     }
     //по главной диагоналям
-    if (checkDiagFor(player, r => r)) {
-        return true;
+    let mainDiag = checkDiagFor(player, r => r);
+    if (mainDiag) {
+        return mainDiag;
     }
     //по второй диагонали
-    else if (checkDiagFor(player, r => dimension - 1 - r)) {
-        return true;
+    let secondDiag = checkDiagFor(player, r => dimension - 1 - r);
+    if (secondDiag) {
+        return secondDiag;
     }
+
     return false;
 }
 
-function renderWinnerColors(winner) {
+function renderWinnerColors(winner, fillMask) {
     const loser = winner === CROSS ? ZERO : CROSS;
-    for (let row = 0; row < dimension; row++) {
-        for (let col = 0; col < dimension; col++) {
-            if (field[row][col] === EMPTY) {
-                continue;
-            }
-            if (field[row][col] === winner) {
-                renderSymbolInCell(winner, row, col, WINNER_COLOR);
-            } else {
-                renderSymbolInCell(loser, row, col, LOSER_COLOR);
-            }
-
-        }
+    for (const [row, col] of fillMask){
+        renderSymbolInCell(winner, row, col, WINNER_COLOR);
     }
 }
 
 function checkGameEnded() {
-    if (checkWinFor(ZERO)) {
+    let zeroWin = checkWinFor(ZERO);
+    if (zeroWin) {
         alert("Нолики выиграли");
-        renderWinnerColors(ZERO);
-        return true;
-    } else if (checkWinFor(CROSS)) {
-        alert("Крестики выиграли");
-        renderWinnerColors(CROSS);
+        renderWinnerColors(ZERO, zeroWin);
         return true;
     }
+    let crossWin = checkWinFor(CROSS);
+    if (crossWin) {
+        alert("Крестики выиграли");
+        renderWinnerColors(CROSS, crossWin);
+        return true;
+    }
+
     for (const row of field) {
         for (const cell of row) {
             if (cell === EMPTY) {
@@ -215,7 +223,7 @@ function* foreachAllLines(size) {
     yield ['d', 1];
 }
 
-function renderSymbolInCell (symbol, row, col, color = '#333') {
+function renderSymbolInCell(symbol, row, col, color = '#333') {
     const targetCell = findCell(row, col);
 
     targetCell.textContent = symbol;
